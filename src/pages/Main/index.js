@@ -1,5 +1,7 @@
+import 'react-toastify/dist/ReactToastify.css';
 import React, { Component } from 'react';
 import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
 import api from '../../services/api';
@@ -11,6 +13,7 @@ export default class Main extends Component {
     newRepo: '',
     repositories: [],
     loading: false,
+    repoError: false,
   };
 
   /**
@@ -40,26 +43,49 @@ export default class Main extends Component {
   };
 
   handleSubmit = async e => {
-    e.preventDefault();
-    this.setState({ loading: true });
+    try {
+      e.preventDefault();
+      this.setState({ loading: true });
 
-    const { newRepo, repositories } = this.state;
+      const { newRepo, repositories } = this.state;
 
-    const response = await api.get(`/repos/${newRepo}`);
+      if (newRepo === '') throw 'Você precisa digitar um nome de repositorio';
 
-    const data = {
-      name: response.data.full_name,
-    };
+      /**
+       * Verifica se o repositorio digitado já está cadastrado
+       */
+      const hasRepo = repositories.find(r => r.name === newRepo);
+      if (hasRepo) throw 'Repositorio Duplicado';
 
-    this.setState({
-      repositories: [...repositories, data],
-      newRepo: '',
-      loading: false,
-    });
+      const response = await api.get(`/repos/${newRepo}`);
+
+      const data = {
+        name: response.data.full_name,
+      };
+
+      this.setState({
+        repositories: [...repositories, data],
+        newRepo: '',
+        repoError: false,
+      });
+    } catch (error) {
+      console.log(error);
+      toast.error(error, {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      this.setState({
+        repoError: true,
+      });
+    } finally {
+      this.setState({
+        loading: false,
+      });
+    }
   };
 
   render() {
-    const { newRepo, repositories, loading } = this.state;
+    const { newRepo, repositories, loading, repoError } = this.state;
 
     return (
       <Container>
@@ -67,13 +93,14 @@ export default class Main extends Component {
           <FaGithubAlt />
           Repositórios
         </h1>
-        <Form onSubmit={this.handleSubmit}>
+        <Form onSubmit={this.handleSubmit} error={repoError}>
           <input
             type="text"
             placeholder="Adicionar repositório"
             value={newRepo}
             onChange={this.handleInputChange}
           />
+
           <SubmitButton loading={loading}>
             {loading ? (
               <FaSpinner color="#fff" size={14} />
