@@ -16,7 +16,7 @@ export const Owener = styled.div`
   align-items: center;
 
   a {
-    color: #7159c1;
+    color: #006600;
     font-size: 16px;
     text-decoration: none;
   }
@@ -78,7 +78,7 @@ export const IssueList = styled.ul`
         color: #333;
 
         &:hover {
-          color: #7159c1;
+          color: #006600;
         }
       }
 
